@@ -6,6 +6,9 @@
 #     ./grab-solr.sh
 
 FROM_SRC=false
+HTTP_VER="httpcomponents-client-4.2.2"
+WAR_DIR=solr-war
+WAR_FILE=webapps/solr.war
 
 if [ $(basename $PWD) != "priv" ]
 then
@@ -82,6 +85,47 @@ get_solr()
     fi
 }
 
+explode_war()
+{
+    if [ ! -e $WAR_DIR ]; then
+        mkdir $WAR_DIR
+        cp $dir/$WAR_FILE $WAR_DIR
+        pushd $WAR_DIR
+        jar xvf solr.war
+        rm -f solr.war
+        popd
+    fi
+}
+
+update_war()
+{
+    if jar tvf $dir/$WAR_FILE | grep 'httpclient.*4.1.*'; then
+        pushd $WAR_DIR
+        rm -f $dir/$WAR_FILE
+        jar cvf $dir/$WAR_FILE *
+        popd
+    fi
+}
+
+get_apache_http()
+{
+    if [ ! -e $HTTP_VER ]; then
+        wget http://www.apache.org/dist/httpcomponents/httpclient/binary/${HTTP_VER}-bin.tar.gz
+        tar zxvf ${HTTP_VER}-bin.tar.gz
+    fi
+}
+
+swap_http_client()
+{
+    get_apache_http
+    if [ -e $WAR_DIR/WEB-INF/lib/httpclient-4.1*.jar ]; then
+        rm -rf $WAR_DIR/WEB-INF/lib/httpclient*
+        rm -rf $WAR_DIR/WEB-INF/lib/httpcore*
+        cp $HTTP_VER/lib/httpclient-4*.jar $WAR_DIR/WEB-INF/lib
+        cp $HTTP_VER/lib/httpcore-4*.jar $WAR_DIR/WEB-INF/lib
+    fi
+}
+
 if check_for_solr
 then
     echo "Solr already exists, exiting..."
@@ -102,3 +146,6 @@ cp -vr $example_dir $dir
 rm -rf $dir/{cloud-scripts,example-DIH,exampledocs,multicore,logs,solr,README.txt}
 cp -v solr.xml $dir
 cp -v *.properties $dir
+explode_war
+swap_http_client
+update_war
