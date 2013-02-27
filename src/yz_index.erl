@@ -48,9 +48,10 @@ create(Name, SchemaName) ->
             ok = add_to_ring(Name, Info)
     end.
 
--spec exists(string()) -> boolean().
+-spec exists(index_name()) -> boolean().
 exists(Name) ->
-    true == yz_solr:ping(Name).
+    Indexes = get_indexes_from_ring(yz_misc:get_ring(raw)),
+    orddict:is_key(Name, Indexes).
 
 %% @doc Removed the index `Name' from the entire cluster.
 -spec remove(string()) -> ok.
