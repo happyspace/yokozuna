@@ -266,11 +266,11 @@ encode_commit() ->
     <<"{}">>.
 
 encode_delete({key,Key}) ->
-    Query = ?YZ_RK_FIELD_S ++ ":" ++ binary_to_list(Key),
+    Query = ?YZ_RK_FIELD_S ++ ":" ++ edoc_lib:escape_uri(binary_to_list(Key)),
     mochijson2:encode({struct, [{delete, ?QUERY(list_to_binary(Query))}]});
 
 encode_delete({key,Key,siblings}) ->
-    Query = ?YZ_RK_FIELD_S ++ ":" ++ binary_to_list(Key) ++ " AND " ++ ?YZ_VTAG_FIELD_S ++ ":[* TO *]",
+    Query = ?YZ_RK_FIELD_S ++ ":" ++ edoc_lib:escape_uri(binary_to_list(Key)) ++ " AND " ++ ?YZ_VTAG_FIELD_S ++ ":[* TO *]",
     mochijson2:encode({struct, [{delete, ?QUERY(list_to_binary(Query))}]});
 
 encode_delete({?YZ_ID_FIELD, Id}) ->
